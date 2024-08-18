@@ -86,13 +86,13 @@ class TrainCard {
   }    
 }
 
-const createTrainCard = (route, block, radioRoute, signUp, pullOut, pullIn, scheduleArray) => {
+const create = (route, block, radioRoute, signUp, pullOut, pullIn, scheduleArray) => {
   const trainCard = new TrainCard(route, block, radioRoute, signUp, pullOut, pullIn, scheduleArray);
   
   trainCard.shiftCalculator();
   database.push(trainCard);
 }
 
-createTrainCard('204', '2', '204', '5:22', '5:37', '22:07', [{}]);
+create('204', '2', '204', '5:22', '5:37', '22:07', [{}]);
 
 console.log(database[0].routeInfo);
