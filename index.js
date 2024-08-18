@@ -1,75 +1,98 @@
-/*
-
-Schedule extends Traincard
-
-A Schedule is an array of trip objects
-
-trip objects have the following properties:
-{
-  RTE NUM,
-  Sign Code,
-  Time Points
-}
-
-*/
+const database = [];
 
 class TrainCard {
-  constructor(route, block, radioRoute, signUp, pullOut, pullIn) {
-    this.route = route;
-    this.block = block;
-    this.radioRoute = radioRoute;
-    this.signUp = signUp;
-    this.pullOut = pullOut;
-    this.pullIn = pullIn;
-    this.morningEnd = '';
-    this.midStart = '';
-    this.midEnd = '';
-    this.nightStart = '';
+  constructor(route, block, radioRoute, signUp, pullOut, pullIn, scheduleArray) {
+    this.routeInfo = {
+      route: route,
+      block: block,
+      radioRoute: radioRoute,
+      signUp: signUp,
+      pullOut: pullOut,
+      pullIn: pullIn,
+      morningEnd: '',
+      midStart: '',
+      midEnd: '',
+      nightStart: '',
+      schedule: scheduleArray
+    }
   }
 
-  #time(valueString) {
-    const hours = Number(valueString.split(':')[0]) * 60;
-    const minutes = Number(valueString.split(':')[1]);
-
-    return (hours + minutes) * 60;
-  }
-
-  #isNewDay(timeString) {
-    const timeStringToArray = timeString.split(':');
-    const hour = Number(timeStringToArray[0]);
-    const minutes = `:${timeStringToArray[1]}`;
-
-    if ((hour >= 0)) {
-      hour = (hour + 24).toString();
+  #time(timeString) {
+    const timeInMinutes = (Number(timeString.split(':')[0]) * 60) + Number(timeString.split(':')[1]);
+    const timeInHours = timeInMinutes / 60;
+    const timeObject = {
+      hours: 0,
+      minutes: 0
     }
 
-    return hour + minutes;
+    timeObject.hours = Math.floor(timeInHours);
+    timeObject.minutes = Math.floor((timeInHours - timeObject.hours) * 60);
+
+    return timeObject;
   }
 
-  #shiftCalculator() {
-    const { signUp, pullIn } = this
-    const routeTime = this.#time(this.#isNewDay(pullIn)) - this.#time(signUp);
-    const morningShift = `${Math.floor(this.#time(signUp) + 8)}:${Math.floor(((this.#time(signUp) + 8) - Math.floor(this.#time(signUp) + 8)) * 60)}`;
-    const nightShift = `${Math.floor(this.#time(signUp) - 8)}:${Math.floor(((this.#time(signUp) - 8) - Math.floor(this.#time(signUp) + 8)) * 60)}`;
+  #isNewDay(pullInObject) {    
+    pullInObject.hours >= 0 && pullInObject.hours < 4
+      ? pullInObject.hours = pullInObject.hours + 24
+      : pullInObject
+    return pullInObject;
+  }
+
+  #duration(start, end) {
+    return ((new Date().setHours(end.hours, end.minutes) - new Date().setHours(start.hours, start.minutes)) / 3600000).toFixed(2);
+  }
+
+  shiftCalculator() {
+    const { signUp, pullIn } = this.routeInfo
+    const startTime = this.#time(signUp);
+    const endTime = this.#isNewDay(this.#time(pullIn))
+    const routeTime = this.#duration(startTime, endTime);
+    const morningShiftEnd = `${startTime.hours + 8}:${startTime.minutes.toString().padStart(2, '0')}`;
+    const nightShiftStart = `${endTime.hours - 8}:${endTime.minutes.toString().padStart(2, '0')}`;
+
+    Object.assign(this.routeInfo, {
+      duration: this.#duration(this.#time(signUp), this.#time(pullIn))
+    })
 
     if (routeTime >= 10.33) {
       if ((routeTime / 2) >= 9.58) {
-        Object.assign(this, {
-          morningEnd: morningShift,
-          midStart: morningShift,
-          midEnd: nightShift,
-          nightStart: nightShift
+        Object.assign(this.routeInfo, {
+          morningEnd: morningShiftEnd,
+          midStart: morningShiftEnd,
+          midEnd: nightShiftStart,
+          nightStart: nightShiftStart,
+          morningDuration: this.#duration(this.#time(signUp), this.#time(morningShiftEnd)),
+          midDuration: this.#duration(this.#time(morningShiftEnd), this.#time(nightShiftStart)),
+          nightDuration: this.#duration(this.#time(nightShiftStart), this.#time(pullIn))
         })
-      } else if ((routeTime / 2) > 5) {
-        if (this.#time(signUp) < 9.5) {
-          Object.assign(this, {
-            morningEnd: morningShift,
-            midStart: morningShift,
-            midEnd: nightShift,
-            nightStart: nightShift
-        })
+      } else {
+        if (this.#time(signUp).hours < this.#time('7:00').hours) {
+          Object.assign(this.routeInfo, {
+            morningEnd: morningShiftEnd,
+            nightStart: morningShiftEnd,
+            morningDuration: this.#duration(this.#time(signUp), this.#time(morningShiftEnd)),
+            nightDuration: this.#duration(this.#time(morningShiftEnd), this.#time(pullIn))
+          })
+        } else {
+          Object.assign(this.routeInfo, {
+            morningEnd: nightShiftStart,
+            nightStart: nightShiftStart,
+            morningDuration: this.#duration(this.#time(signUp), this.#time(nightShiftStart)),
+            nightDuration: this.#duration(this.#time(nightShiftStart), this.#time(pullIn))
+          })
         }
       }
     }
-  }
+  }    
 }
+
+const createTrainCard = (route, block, radioRoute, signUp, pullOut, pullIn, scheduleArray) => {
+  const trainCard = new TrainCard(route, block, radioRoute, signUp, pullOut, pullIn, scheduleArray);
+  
+  trainCard.shiftCalculator();
+  database.push(trainCard);
+}
+
+createTrainCard('204', '2', '204', '5:22', '5:37', '22:07', [{}]);
+
+console.log(database[0].routeInfo);
