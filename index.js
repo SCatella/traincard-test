@@ -86,7 +86,7 @@ class TrainCard {
   }    
 }
 
-const create = (route, block, radioRoute, signUp, pullOut, pullIn, scheduleArray) => {
+const createTrainCard = (route, block, radioRoute, signUp, pullOut, pullIn, scheduleArray) => {
   const trainCard = new TrainCard(route, block, radioRoute, signUp, pullOut, pullIn, scheduleArray);
   
   trainCard.shiftCalculator();
