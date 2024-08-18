@@ -93,6 +93,6 @@ const createTrainCard = (route, block, radioRoute, signUp, pullOut, pullIn, sche
   database.push(trainCard);
 }
 
-create('204', '2', '204', '5:22', '5:37', '22:07', [{}]);
+createTrainCard('204', '2', '204', '5:22', '5:37', '22:07', [{}]);
 
 console.log(database[0].routeInfo);
