@@ -93,6 +93,116 @@ const createTrainCard = (route, block, radioRoute, signUp, pullOut, pullIn, sche
   database.push(trainCard);
 }
 
-createTrainCard('204', '2', '204', '5:22', '5:37', '22:07', [{}]);
+createTrainCard('204', '2', '204', '5:22', '5:37', '22:07', routeSchedule);
 
 console.log(database[0].routeInfo);
+
+//Current Workload
+class Schedule {
+  constructor(route, block, direction, oppositeDirection) {
+    this.routeBlock = [route, block];
+    this.header = [`${direction}`, "RTE NUM", "Sign Code"];
+    this.headerReverse = [`${oppositeDirection}`, "RTE NUM", "Sign Code"];
+    this.reliefPointsHeaderIndex = {};
+    this.schedule = [];
+  }
+
+  #setReliefPoints(headerArray) {
+    const reliefArray = [headerArray[0]];
+
+    headerArray.forEach((element, index) => {
+      if (element.includes("*")) {
+        reliefArray.push(index);
+      }
+    })
+    
+    Object.assign(this.reliefPointsHeaderIndex, { [reliefArray.shift()]: reliefArray })
+  }
+
+  setHeaders(timePointsHeaderArray, timePointsHeaderArrayReverse) {
+    const headerTerminator = ["TO RTE", "NEXT TIME"];
+
+    this.header.push(...timePointsHeaderArray);
+    this.header.push(...headerTerminator);
+    this.headerReverse.push(...timePointsHeaderArrayReverse);
+    this.headerReverse.push(...headerTerminator);
+    this.#setReliefPoints(this.header);
+    this.#setReliefPoints(this.headerReverse);
+  }
+
+  createTrip(route, signCode, timePointsArray) {
+    const tripValues = ["", route, signCode];
+    const tripKey = `trip_${this.schedule.length}`;
+
+    tripValues.push(...timePointsArray);
+    (this.schedule.length % 2) == true
+      ? this.schedule.push(
+        {
+          header: this.headerReverse,
+          [`${tripKey}`]: tripValues
+        }
+      )
+      : this.schedule.push(
+        {
+          header: this.header,
+          [`${tripKey}`]: tripValues
+        }
+      );
+  }
+};
+
+
+const timePointsHeaderArray = [
+  "TbMs Bdwy (Lv)",
+  "Mrhd TbMs",
+  "Bdwy Eucl",
+  "Dtwn Bldr Gt-J (Ar)*",
+  "Dtwn Bldr Gt-J (Lv)",
+  "Waln 20th",
+  "19th Josl",
+  "Frnt Rnge Bdwy(Ar)",
+];
+
+const timePointsHeaderArrayReverse = [
+  "Frnt Rnge Bdwy(Ar)",
+  "19th Iris",
+  "Waln 20th",
+  "Dtwn Bldr Gt-K (Ar)*",
+  "Dtwn Bldr Gt-K (Lv)",
+  "Bdwy Eucl",
+  "Mrhd TbMs",
+  "TbMs Bdwy (Ar)",
+  "TbMs Bdwy (Lv)",
+];
+
+const trip_1 = [
+  "6:22",
+  "6:27",
+  "6:35",
+  "6:44",
+  "6:45",
+  "6:47",
+  "6:53",
+  "7:04",
+  "",
+  "7:16"
+];
+
+const trip_2 = [
+  "7:16",
+  "7:26",
+  "7:32",
+  "7:36",
+  "7:37",
+  "7:42",
+  "7:50",
+  "7:54",
+  "7:56",
+  "",
+  "7:16"
+];
+
+const routeSchedule = new Schedule("204", "2", "N-Bound", "S-Bound");
+routeSchedule.setHeaders(timePointsHeaderArray, timePointsHeaderArrayReverse);
+routeSchedule.createTrip("204", "0C48", trip_1);
+routeSchedule.createTrip("204", "0679", trip_2);
