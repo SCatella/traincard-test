@@ -86,17 +86,6 @@ class TrainCard {
   }    
 }
 
-const createTrainCard = (route, block, radioRoute, signUp, pullOut, pullIn, scheduleArray) => {
-  const trainCard = new TrainCard(route, block, radioRoute, signUp, pullOut, pullIn, scheduleArray);
-  
-  trainCard.shiftCalculator();
-  database.push(trainCard);
-}
-
-createTrainCard('204', '2', '204', '5:22', '5:37', '22:07', routeSchedule);
-
-console.log(database[0].routeInfo);
-
 //Current Workload
 class Schedule {
   constructor(route, block, direction, oppositeDirection) {
@@ -104,7 +93,7 @@ class Schedule {
     this.header = [`${direction}`, "RTE NUM", "Sign Code"];
     this.headerReverse = [`${oppositeDirection}`, "RTE NUM", "Sign Code"];
     this.reliefPointsHeaderIndex = {};
-    this.schedule = [];
+    this.trips = [];
   }
 
   #setReliefPoints(headerArray) {
@@ -132,17 +121,17 @@ class Schedule {
 
   createTrip(route, signCode, timePointsArray) {
     const tripValues = ["", route, signCode];
-    const tripKey = `trip_${this.schedule.length}`;
+    const tripKey = `trip_${this.trips.length}`;
 
     tripValues.push(...timePointsArray);
-    (this.schedule.length % 2) == true
-      ? this.schedule.push(
+    (this.trips.length % 2) == true
+      ? this.trips.push(
         {
           header: this.headerReverse,
           [`${tripKey}`]: tripValues
         }
       )
-      : this.schedule.push(
+      : this.trips.push(
         {
           header: this.header,
           [`${tripKey}`]: tripValues
@@ -206,3 +195,14 @@ const routeSchedule = new Schedule("204", "2", "N-Bound", "S-Bound");
 routeSchedule.setHeaders(timePointsHeaderArray, timePointsHeaderArrayReverse);
 routeSchedule.createTrip("204", "0C48", trip_1);
 routeSchedule.createTrip("204", "0679", trip_2);
+
+const createTrainCard = (route, block, radioRoute, signUp, pullOut, pullIn, scheduleArray) => {
+  const trainCard = new TrainCard(route, block, radioRoute, signUp, pullOut, pullIn, scheduleArray);
+  
+  trainCard.shiftCalculator();
+  database.push(trainCard);
+}
+
+createTrainCard('204', '2', '204', '5:22', '5:37', '22:07', routeSchedule);
+
+console.log(database[0].routeInfo.schedule.trips);
