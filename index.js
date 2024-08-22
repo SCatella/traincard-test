@@ -191,11 +191,6 @@ const trip_2 = [
   "7:16"
 ];
 
-const routeSchedule = new Schedule("204", "2", "N-Bound", "S-Bound");
-routeSchedule.setHeaders(timePointsHeaderArray, timePointsHeaderArrayReverse);
-routeSchedule.createTrip("204", "0C48", trip_1);
-routeSchedule.createTrip("204", "0679", trip_2);
-
 const createTrainCard = (route, block, radioRoute, signUp, pullOut, pullIn, scheduleArray) => {
   const trainCard = new TrainCard(route, block, radioRoute, signUp, pullOut, pullIn, scheduleArray);
   
@@ -203,6 +198,12 @@ const createTrainCard = (route, block, radioRoute, signUp, pullOut, pullIn, sche
   database.push(trainCard);
 }
 
+const routeSchedule = new Schedule("204", "2", "N-Bound", "S-Bound");
+
+routeSchedule.setHeaders(timePointsHeaderArray, timePointsHeaderArrayReverse);
+routeSchedule.createTrip("204", "0C48", trip_1);
+routeSchedule.createTrip("204", "0679", trip_2);
+
 createTrainCard('204', '2', '204', '5:22', '5:37', '22:07', routeSchedule);
 
-console.log(database[0].routeInfo.schedule.trips);
+console.log(database[0].routeInfo);
