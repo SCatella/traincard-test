@@ -1,3 +1,8 @@
+const express = require('express');
+const app = express();
+const port = 3000;
+
+
 const database = [];
 
 class TrainCard {
@@ -84,6 +89,8 @@ class TrainCard {
       return schedule.trips[nightReliefPointArray.indexOf(Math.min(...nightReliefPointArray))].tripArray[schedule.reliefPoints[Object.keys(schedule.reliefPoints)[0]]];
     }
 
+    morningReliefTime();
+    nightReliefTime();
     if (routeTime >= 10.33) {
       if ((routeTime / 2) >= 9.58) {
         Object.assign(this.routeInfo, {
@@ -116,7 +123,6 @@ class TrainCard {
   }    
 }
 
-//Current Workload
 class Schedule {
   constructor(route, block, direction, oppositeDirection) {
     this.routeBlock = [route, block];
@@ -177,6 +183,7 @@ const createTrainCard = (route, block, radioRoute, signUp, pullOut, pullIn, sche
   database.push(trainCard);
 }
 
+// User Inputs
 const timePointsHeaderArray = [
   "TbMs Bdwy (Lv)",
   "Mrhd TbMs",
@@ -185,7 +192,7 @@ const timePointsHeaderArray = [
   "Dtwn Bldr Gt-J (Lv)",
   "Waln 20th",
   "19th Josl",
-  "Frnt Rnge Bdwy(Ar)*",
+  "Frnt Rnge Bdwy(Ar)",
 ];
 
 const timePointsHeaderArrayReverse = [
@@ -437,4 +444,10 @@ routeSchedule.createTrip("204", "0679", trip_16);
 
 createTrainCard('204', '2', '204', '5:22', '5:37', '22:07', routeSchedule);
 
-console.dir(database[0].routeInfo, { depth: 99 });
+app.get('/', (req, res) => {
+  res.send(JSON.stringify(database));
+})
+
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`)
+})
