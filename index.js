@@ -13,6 +13,9 @@ class TrainCard {
       midStart: '',
       midEnd: '',
       nightStart: '',
+      duration: '',
+      morningDuration: '',
+      nightDuration: '',
       schedule: scheduleArray
     }
   }
@@ -43,10 +46,11 @@ class TrainCard {
   }
 
   shiftCalculator() {
-    const { signUp, pullIn , schedule} = this.routeInfo
+    const { signUp, pullIn, schedule } = this.routeInfo
     const startTime = this.#time(signUp);
     const endTime = this.#isNewDay(this.#time(pullIn))
     const routeTime = this.#duration(startTime, endTime);
+    const reliefPoints = Object.keys(schedule.reliefPoints);
     const morningReliefPointArray = [];
     const nightReliefPointArray = [];
     const morningShiftEnd = `${startTime.hours + 8}:${startTime.minutes.toString().padStart(2, '0')}`;
@@ -56,23 +60,28 @@ class TrainCard {
       duration: this.#duration(this.#time(signUp), this.#time(pullIn))
     })
 
-    schedule.trips.forEach((element) => {
-      morningReliefPointArray.push(Math.abs(
-        this.#duration(this.#time(element.tripArray[schedule.reliefPointsHeaderIndex[Object.keys(schedule.reliefPointsHeaderIndex)[0]]]),
-          this.#time(morningShiftEnd)))
-      );
-      nightReliefPointArray.push(Math.abs(
-        this.#duration(this.#time(element.tripArray[schedule.reliefPointsHeaderIndex[Object.keys(schedule.reliefPointsHeaderIndex)[0]]]),
-          this.#time(nightShiftStart)))
-      );
+    reliefPoints.forEach((direction) => {
+      for (let index = 0; index < schedule.reliefPoints[direction].length; index++) {
+        schedule.trips.forEach((trip) => {
+          morningReliefPointArray.push(Math.abs(
+            this.#duration(this.#time(trip.tripArray[schedule.reliefPoints[direction][index]]),
+            
+            this.#time(morningShiftEnd)))
+          );
+          nightReliefPointArray.push(Math.abs(
+            this.#duration(this.#time(trip.tripArray[schedule.reliefPoints[direction][index]]),
+            this.#time(nightShiftStart)))
+          );
+        });
+      }
     });
 
     const morningReliefTime = () => {
-      return schedule.trips[morningReliefPointArray.indexOf(Math.min(...morningReliefPointArray))].tripArray[schedule.reliefPointsHeaderIndex[Object.keys(schedule.reliefPointsHeaderIndex)[0]]];
+      return schedule.trips[morningReliefPointArray.indexOf(Math.min(...morningReliefPointArray))].tripArray[schedule.reliefPoints[Object.keys(schedule.reliefPoints)[0]]];
     }
 
     const nightReliefTime = () => {
-      return schedule.trips[nightReliefPointArray.indexOf(Math.min(...nightReliefPointArray))].tripArray[schedule.reliefPointsHeaderIndex[Object.keys(schedule.reliefPointsHeaderIndex)[0]]];
+      return schedule.trips[nightReliefPointArray.indexOf(Math.min(...nightReliefPointArray))].tripArray[schedule.reliefPoints[Object.keys(schedule.reliefPoints)[0]]];
     }
 
     if (routeTime >= 10.33) {
@@ -113,7 +122,7 @@ class Schedule {
     this.routeBlock = [route, block];
     this.header = [`${direction}`, "RTE NUM", "Sign Code"];
     this.headerReverse = [`${oppositeDirection}`, "RTE NUM", "Sign Code"];
-    this.reliefPointsHeaderIndex = {};
+    this.reliefPoints = {};
     this.trips = [];
   }
 
@@ -126,7 +135,7 @@ class Schedule {
       }
     })
     
-    Object.assign(this.reliefPointsHeaderIndex, { [reliefArray.shift()]: reliefArray })
+    Object.assign(this.reliefPoints, { [reliefArray.shift()]: reliefArray })
   }
 
   setHeaders(timePointsHeaderArray, timePointsHeaderArrayReverse) {
@@ -176,7 +185,7 @@ const timePointsHeaderArray = [
   "Dtwn Bldr Gt-J (Lv)",
   "Waln 20th",
   "19th Josl",
-  "Frnt Rnge Bdwy(Ar)",
+  "Frnt Rnge Bdwy(Ar)*",
 ];
 
 const timePointsHeaderArrayReverse = [
@@ -428,4 +437,4 @@ routeSchedule.createTrip("204", "0679", trip_16);
 
 createTrainCard('204', '2', '204', '5:22', '5:37', '22:07', routeSchedule);
 
-console.log(database[0].routeInfo);
+console.dir(database[0].routeInfo, { depth: 99 });
